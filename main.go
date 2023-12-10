@@ -55,7 +55,7 @@ func main() {
 		}
 
 		if !info.IsDir() {
-			fmt.Printf("File: %s\n", srcPath)
+			log.Printf("file: %s\n", srcPath)
 			f, err := os.Open(srcPath)
 			if err != nil {
 				log.Fatal(err)
