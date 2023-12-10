@@ -49,14 +49,14 @@ func main() {
 	log.Printf("The source folder of the images is: %v\n", src)
 	log.Printf("The destination folder of the images is: %v\n", dst)
 
-	err := filepath.Walk(src, func(path string, info os.FileInfo, err error) error {
+	err := filepath.Walk(src, func(srcPath string, info os.FileInfo, err error) error {
 		if err != nil {
-			return fmt.Errorf("accessing file: %v : %v", path, err)
+			return fmt.Errorf("accessing file: %v : %v", srcPath, err)
 		}
 
 		if !info.IsDir() {
-			fmt.Printf("File: %s\n", path)
-			f, err := os.Open(path)
+			fmt.Printf("File: %s\n", srcPath)
+			f, err := os.Open(srcPath)
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -73,14 +73,21 @@ func main() {
 				log.Fatal(err)
 			}
 
-			dstF, err := os.Create(dst + fmt.Sprintf("%x%v", h.Sum(nil), filepath.Ext(path)))
+			destPath := fmt.Sprintf("%v%x%v", dst, h.Sum(nil), filepath.Ext(srcPath))
+			_, err = os.Stat(destPath)
 			if err != nil {
-				log.Fatal(err)
-			}
+				df, err := os.OpenFile(destPath, os.O_RDWR|os.O_CREATE, 0644)
+				if err != nil {
+					log.Fatal(err)
+				}
 
-			_, err = io.Copy(dstF, bytes.NewReader(buf.Bytes()))
-			if err != nil {
-				log.Fatal(err)
+				_, err = io.Copy(df, bytes.NewReader(buf.Bytes()))
+				if err != nil {
+					log.Fatal(err)
+				}
+				log.Printf("created file %v", destPath)
+			} else {
+				log.Printf("skipping file %v: %v", srcPath, err)
 			}
 		}
 		return nil
