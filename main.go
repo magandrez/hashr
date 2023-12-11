@@ -10,6 +10,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"time"
 )
 
 var src, dst string
@@ -36,6 +37,17 @@ func main() {
 
 	flag.Parse()
 
+	timestamp := time.Now().UTC().Unix()
+	logFileName := filepath.Join(".", fmt.Sprintf("hashr_%v.log", timestamp))
+	logFile, err := os.Create(logFileName)
+	if err != nil {
+		log.Fatalf("error opening log file: %v", err)
+	}
+	defer logFile.Close()
+
+	log.SetOutput(io.MultiWriter(os.Stdout, logFile))
+	log.Printf("log file for this process available at: %s", logFileName)
+
 	if ok, err := validFolder(src); !ok {
 		log.Fatalf("invalid argument: please specify a source folder "+
 			"containing images to copy: %v", err)
@@ -49,7 +61,7 @@ func main() {
 	log.Printf("The source folder of the images is: %v\n", src)
 	log.Printf("The destination folder of the images is: %v\n", dst)
 
-	err := filepath.Walk(src, func(srcPath string, info os.FileInfo, err error) error {
+	err = filepath.Walk(src, func(srcPath string, info os.FileInfo, err error) error {
 		if err != nil {
 			return fmt.Errorf("accessing file: %v : %v", srcPath, err)
 		}
