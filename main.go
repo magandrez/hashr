@@ -63,26 +63,26 @@ func main() {
 
 	err = filepath.Walk(src, func(srcPath string, info os.FileInfo, err error) error {
 		if err != nil {
-			return fmt.Errorf("accessing file: %v : %v", srcPath, err)
+			log.Fatalf("accessing file %v: %v", srcPath, err)
 		}
 
 		if !info.IsDir() {
 			log.Printf("file: %s\n", srcPath)
 			f, err := os.Open(srcPath)
 			if err != nil {
-				log.Fatal(err)
+				log.Fatalf("opening file %v: %v", srcPath, err)
 			}
 			defer f.Close()
 
 			buf := new(bytes.Buffer)
 			_, err = io.Copy(buf, f)
 			if err != nil {
-				return fmt.Errorf("reading contents of file to buffer: %w", err)
+				log.Fatalf("reading file %v to buffer: %v", srcPath, err)
 			}
 
 			h := sha256.New()
 			if _, err := io.Copy(h, bytes.NewReader(buf.Bytes())); err != nil {
-				log.Fatal(err)
+				log.Fatalf("hashing file %v: %v", srcPath, err)
 			}
 
 			destPath := fmt.Sprintf("%v%x%v", dst, h.Sum(nil), filepath.Ext(srcPath))
@@ -90,12 +90,12 @@ func main() {
 			if err != nil {
 				df, err := os.OpenFile(destPath, os.O_RDWR|os.O_CREATE, 0644)
 				if err != nil {
-					log.Fatal(err)
+					log.Fatalf("creating file %v: %v", destPath, err)
 				}
 
 				_, err = io.Copy(df, bytes.NewReader(buf.Bytes()))
 				if err != nil {
-					log.Fatal(err)
+					log.Fatalf("copying to destination file %v: %v", destPath, err)
 				}
 				log.Printf("created file %v", destPath)
 			} else {
